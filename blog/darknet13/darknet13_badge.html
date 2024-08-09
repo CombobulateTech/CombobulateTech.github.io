@@ -46,7 +46,12 @@
                     <li>
                         <b>Badge Level 2</b>
                         <br>
-                        This badge is designed to blink. You will pick your own resostors, capacitors, LEDs, transistors, and battery pack.
+                        This badge is designed to blink in a sine wave. You will pick your own resistors, capacitors, LEDs, transistors, and battery pack.
+                    </li>
+                    <li>
+                        <b>Badge Level 3</b>
+                        <br>
+                        This badge is designed to blink in a square wave. You sill pick your own resistors, capacitors, LEDs, 555 timer, and battery pack
                     </li>
                 </ul>
             </div>
@@ -195,6 +200,17 @@
                         </a>
                     </li>
                     <li>
+                        <b>555 Timer IC</b> (U#)
+                        <br>
+                        A 555 is an Integrated Circuit (IC) that is used as a timer, delay, pulse generation or oscillator.
+                        <br>
+                        Think of this as a really fancy sun dial.
+                        <br>
+                        <a target="_blank" href="pictures/555_symbol.webp">
+                            <img src="pictures/555_symbol.webp" style="max-width:100%;height:auto;" title="A screenshot of the electronics symbol for a 555 timer IC" alt="A screenshot of the electronics symbol for a 555 timer IC">
+                        </a>
+                    </li>
+                    <li>
                         <b>Bistable Multivibrator</b>
                         <br>
                         A multivibrator is an electronic device that produces a non-sinusoidal waveform. A sinusoidal (Sine) waveform is a wave that has a gradual increase and decrease. A non-sinusoidal waveform is a wave that does not have have gradual increases or decreases, like a square wave. A picture is worth a thousand words:
@@ -249,6 +265,11 @@
                             <img src="pictures/2N2222A.webp" style="max-width:100%;height:auto;" title="A picture of a 2N2222A transitor component with the pins labeled from left to right with 1, 2, and 3. Then a screenshot of the electronics symbol of a transitor, labeling the Base with 2, Collector with 3, and the Emitter with 1 to help identify the pins to the parts of a transistor" alt="A picture of a 2N2222A transitor component with the pins labeled from left to right with 1, 2, and 3. Then a screenshot of the electronics symbol of a transitor, labeling the Base with 2, Collector with 3, and the Emitter with 1 to help identify the pins to the parts of a transistor">
                         </a>
                     </li>
+                    <li>
+                        <b>Integrated Circuit</b> (U#)
+                        <br>
+                        555 Timer
+                    </li>
                 </ul>
             </div>
             <div>
@@ -281,6 +302,19 @@
                                 https://www.youtube.com/watch?v=FtxmFlMLYRI
                             </a>
                         </small>
+                    </li>
+                    <li>
+                        <b>555 IC Formula</b>
+                        <br>
+                        We will use a square wave duty cycle formula to calculate the LED flash rate. We will need to know the values of two resistors (R1, R2) and one capacitor (C1).
+                        <br>
+                        When calculating a square wave duty cycle, we will have to calculate how long the LED is on for (Time High) and how long the LED is off for (Time Low).
+                        <br>
+                        <i>
+                            Thigh = 0.7 * (R1 + R2) * C1
+                            <br>
+                            Tlow = 0.7 * R2 * C1
+                        </i>
                     </li>
                 </ul>
             </div>
@@ -450,7 +484,159 @@
         <hgroup>
             <div>
                 <h2>
-                    Congratulations you, in theory, have a 1 or 2 working Darknet Badges for DEFCON 32
+                    Badge Level 3
+                </h2>
+                Badge level 3 consists of a power supply (batteries and a battery pack) (BT1), resistors (R#), capacitor (C1), 555 Timer IC (U1), and a LED (D1).
+                <br>
+                Instead of transistors like we used in badge level 2 we will be using the 555 Timer IC (U1) in what is called an astable mode. Astable means that the 555 Timer IC (U1) will oscillate or fluctuate between off and on. This oscillation will be what causes the LED to blink.
+                <br>
+                The oscillation that we will be using is called a square wave:
+                <br>
+                <a target="_blank" href="pictures/square_wave.webp">
+                    <img src="pictures/square_wave.webp" style="max-width:100%;height:auto;" title="A screenshot of a square wave" alt="A screenshot of a square wave">
+                </a>
+                <br>
+                When working with square waves, we need to look at a couple of time measurements. The first is how long is the square wave at its peak, and the second is how long is teh square wave at its valley.
+                <br>
+                The square wave peak will determine how long the LED is on for, and the square wave valley will determine how long the LED is off for. Basically it will tell us what the blinking rate of the LED is.
+                <br>
+                We will start off with an example using the 555 Timer IC (U1) formula that we defined in the formula's section.
+                <br>
+                As an example let's use a 8412 ohm resistor (R1), a 369 ohm resistor (R2), and a 707 μF capacitor (C1). To calculate the square wave and therefore the blink rate, we will start with the Time High:
+                <br>
+                <i>
+                    Thigh = 0.7 * (R1 + R2) * C1
+                    <br>
+                    Thigh = 0.7 * (8412 + 369) * 0.00707
+                    <br>
+                    Thigh = 0.7 * 8781 * 0.00707
+                    <br>
+                    Thigh = 6146.7 * 0.00707
+                    <br>
+                    Thigh = 43.457169
+                    <br><br>
+                </i>
+                Then to calculate the square wave Time Low we would:
+                <br>
+                <i>
+                    Tlow = 0.7 * R2 * C1
+                    <br>
+                    Tlow = 0.7 * 369 * 0.00707
+                    <br>
+                    Tlow = 258.3 * 0.00707
+                    <br>
+                    Tlow = 1.826181
+                    <br><br>
+                </i>
+                So in this example the LED (D1) will turn on for ~ 43 seconds, and then it will turn off for ~2 seconds. Basically the LED (D1) will stay on for a long time and then it will blink off quickly and turn back on.
+                <br><br>
+                Now that we know how to calculate what the blink rate is using a square wave, we can start to design our circuit using the 555 Timer IC (U1). But first we need to learn a little about the 555 Timer IC (U1).
+                <br>
+                The 555 Timer IC (U1) has a total of 8 pins:
+                <br>
+                <ol>
+                    <li>
+                        Ground (GND)
+                        <br>
+                        The ground pin (1) is used as ground for power to flow towards. As we apply voltage it will flow towards the ground pin.
+                    </li>
+                    <li>
+                        Trigger (TR)
+                        <br>
+                        The trigger pin (2) is used to determine when the output pin needs to be turned on. This is triggered (hehehe) by reaching a threshold of less than 1/3 of the supplied voltage.
+                    </li>
+                    <li>
+                        Output (Q)
+                        <br>
+                        The output pin (3) is where the power goes if the trigger pin is activated. So the output pin is either low, which means that it isn't supplying voltage (or very low voltage), or it is high, which means that it is outputting close to the voltage supplied.
+                    </li>
+                    <li>
+                        Reset (R)
+                        <br>
+                        The reset pin (4) is like the old reset button on your Nintendo (yes I am that old). When pressed it will reset the state of the IC until the trigger is triggered. To activate the reset pin, we attach it to the ground.
+                    </li>
+                    <li>
+                        Control (CV)
+                        <br>
+                        The control pin (5) is used to try and level out fluctuations in the voltage supplied. Usually this is just connected to the ground or the negative on the power supply.
+                    </li>
+                    <li>
+                        Threshold (THR)
+                        <br>
+                        The threshold pin (6) is used to determine when the output pin needs to be turned off. This is triggered by reaching a threshold (hehehe) of more than 2/3 of the supplied voltage.
+                    </li>
+                    <li>
+                        Discharge (DIS)
+                        <br>
+                        The discharge pin (7) will act as a ground or negative to discharge whatever is in the IC while it is on.
+                    </li>
+                    <li>
+                        Vcc (VCC)
+                        <br>
+                        The Vcc pin (8) is connected to the positive end of the power supply. The power supply needs to supply a minimum of 4.5 volts.
+                    </li>
+                </ol>
+                So now that we know a little bit about how the 555 Timer IC (U1) works, we can really start to design our circuit.
+                <br>
+                We know that we need to have power (red) go to Vcc (Pin 8), but we also want power (BT1) to go to Reset (Pin 4) as well. The reason that we are supplying power to Reset is that we don't want Reset to go to the ground and reset our IC (U1).
+                <br><br>
+                <a target="_blank" href="pictures/badge3_part1.webp">
+                    <img src="pictures/badge3_part1.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R).">
+                </a>
+                <br><br>
+                We also know that we need to have Ground (Pin 1) connect to negative (black) (BT1).
+                <br><br>
+                <a target="_blank" href="pictures/badge3_part2.webp">
+                    <img src="pictures/badge3_part2.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R). The 555 timer IC (U1) pin 1 (GND) connects to negative of the 4.5V battery (BT1)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R). The 555 timer IC (U1) pin 1 (GND) connects to negative of the 4.5V battery (BT1).">
+                </a>
+                <br><br>
+                We know that Output is where the power will output itself, so that is where we need to connect the anode of the LED (D1). But remember, a LED needs a resistor inline so that it doesn't pop. So please use Ohm's Law to determine the resistor (R3) value to place before the anode. We will also need to connect the cathode of the LED (D1) to the negative (black) (BT1).
+                <br><br>
+                <a target="_blank" href="pictures/badge3_part3.webp">
+                    <img src="pictures/badge3_part3.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) which connects to negative of the 4.5V battery (BT1)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC) and pin 4 (R). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) which connects to negative of the 4.5V battery (BT1).">
+                </a>
+                <br><br>
+                This is where the circuit gets a little bit tricky, as we need to connect the Discharge (Pin 7), the Threshold (Pin 6), and the Trigger (Pin 2). We will also need to add in a couple of resistors (R1, R2) and a capacitor (C1).
+                <br>
+                We know that when the IC (U1) is off, meaning that the Threshold (Pin 6) has more than 2/3 voltage, that the Discharge (Pin 7) is on. We will use the Discharge (Pin 7) to charge the capacitor (C1).
+                <br>
+                So to begin with, we need to connect the Discharge (Pin 7) to a resistor (R1). We also need to make sure that we have a complete circuit so we will attach the resistor (R1) to power (red).
+                <br><br>
+                <a target="_blank" href="pictures/badge3_part4.webp">
+                    <img src="pictures/badge3_part4.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) which connects to negative of the 4.5V battery (BT1)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) which connects to negative of the 4.5V battery (BT1).">
+                </a>
+                <br><br>
+                Since the Discharge (Pin 7) will be used to charge the capacitor (C1), we need to add a resistor (R2) between Discharge (Pin 7) and the capacitor (C1). This resistor (R2) will slow the charge of the capacitor (C1) and therefore determine the vallue (low) of the square wave (how long the LED is off for).
+                <br><br>
+                <a target="_blank" href="pictures/badge3_part5.webp">
+                    <img src="pictures/badge3_part5.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS) and a resistor (R2) which connects to the positive of a capacitor (C1). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) and the negative of a capacitor (C1) which connects to negative of the 4.5V battery (BT1)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS) and a resistor (R2) which connects to the positive of a capacitor (C1). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) and the negative of a capacitor (C1) which connects to negative of the 4.5V battery (BT1).">
+                </a>
+                <br><br>
+                Lets go a little more in depth into this. So when we turn on the power supply (BT1), the capacitor (C1) will be discharged, meaning it is like a dead battery. Also since we just applied power, we know that the Trigger (Pin 2) will be at less than 1/3 supplied voltage, so the IC (U1) will turn on and the LED (D1) will turn on. The Discharge (Pin 7) will also turn on, and begin to charge the capacitor (C1) through the resistors (R1, R2). Once the capacitor (C1) goes over the 2/3 supplied voltage required for the Threshold (Pin 6) then the IC (U1) will turn off, turning off the LED (D1) and Discharge (Pin 7) of the IC (U1). The IC (U1) will stay off until the capacitor (C1) is disharged. Once the capacitor (C1) goes below the 1/3 supplied voltage for the Trigger (Pin 2) then the IC (U1) will turn on, which will turn on the LED (D1) and the Discharge (Pin 7). This process will continue to repeate itself turning the LED (D1) on and off based on the values of the capacitor (C1) and the resistors (R1, R2).
+                <br>
+                So now, we just need to connect the Trigger (Pin 2) and the Threshold (Pin 6) to the capacitor (C1) and our circuit should be complete.
+                <br><br>
+                <a target="_blank" href="pictures/badge3_full.webp">
+                    <img src="pictures/badge3_full.webp" class="css_thumbnail_75" title="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS) and a resistor (R2) which connects to the 555 timer IC (U1) pin 6 (THR) which connects to both the 555 timer IC (U1) pin 2 (TR) and the positive of a capacitor (C1). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) and the negative of a capacitor (C1) which connects to negative of the 4.5V battery (BT1)." alt="A screenshot of a circuit diagram that has the positive of a 4.5V battery (BT1) that connects in parallel to a 555 timer IC (U1) on pin 8 (VCC), pin 4 (R), and a resistor (R1) that connects to the 555 timer IC (U1) pin 7 (DIS) and a resistor (R2) which connects to the 555 timer IC (U1) pin 6 (THR) which connects to both the 555 timer IC (U1) pin 2 (TR) and the positive of a capacitor (C1). The 555 timer IC (U1) pin 3 (Q) connects to a resistor (R3) which connects to the annode of a LED (D1) whose cathode connects to the 555 timer IC (U1) pin 1 (GND) and the negative of a capacitor (C1) which connects to negative of the 4.5V battery (BT1).">
+                </a>
+                <br><br>
+                Since we have such a complicated circuit, lets recap how it works:
+                <br>
+                When the Trigger (Pin 2) is less than 1/3 supplied voltage, then the IC (U1) will pass power through the Output (Pin 3) which will power the LED (D1) turning the LED (D1) on. It will also pass power through the Discharge (Pin 7).
+                <br>
+                The Discharge (Pin 7) is connected to the capacitor (C1) through a series of resistors (R1, R2), so when the IC (U1) is on, it will start to charge the capacitor (C1). Once the capacitor (C1) reaches 2/3 of supplied voltage, then it will activate the Threshold (Pin 6). When Threshold (Pin 6) is activated, then the IC (U1) will turn off, and the LED (D1) will turn off. While the IC (U1) is off, the Discharge (Pin 7) will also be off.
+                <br>
+                When the capacitor (C1) drops below 1/3 supplied voltage, then the Trigger (Pin 2) will activate and turn the IC (U1) back on.
+                <br>
+                This process will repeat itself for as long as there is power supplied to the circuit, causing the LED (D1) to blink according to the values calculated for the square wave.
+                <br><br>
+                Congratulations, you, in theory have a working Darknet 13 level 3 badge.
+            </div>
+        </hgroup>
+        <hgroup>
+            <div>
+                <h2>
+                    Congratulations you, in theory, have a 1, 2 or 3 working Darknet Badges for DEFCON 32
                 </h2>
                 <br><br>
             </div>
