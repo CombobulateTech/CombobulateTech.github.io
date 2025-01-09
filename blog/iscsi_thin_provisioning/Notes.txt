@@ -1,0 +1,123 @@
+Check the status of a ZFS pool
+    zpool status -v s2z6p01
+That command will list out the status, any errors, what RAIDz is set to and the GPTID's of the disks in the pool
+To get the component ID of the drive run
+    glabel status | grep gptid/xxxxxx
+This will give you the component ID of the drive something like da11p2
+    da4p2
+    da3p2
+    da1p2
+    da5p2
+    da2p2
+    da0p2
+To get more information on each drive you run
+    geom disk list
+You look for the comonent which translates to the Geom name or just the Name
+This will give you things like the:
+    mediasize (In bytes) (7681501126656)
+    sectorsize
+    description (Model number)
+    ident (Serial number)
+We have a total of 6 drives at 7681501126656 for a total combined space of 46089006759936 (41.91771 TiB)
+We lose at least 2 drives to the raidz2 plus a little more for meta data
+To get the actual size of the zpool run
+    zfs list -o space s2z6p01
+This will give you the:
+    AVAIL (Total available size after RAIDz)
+    USED (Total used space, this can fluctuate based on deduplication and compression)
+
+??How do I find ZFS volume usable size?
+
+To get a list of LUNs
+    ctladm lunlist
+This will list out each of the LUNs that are on shared out through iSCSI
+To get information about using the ctl-lun run:
+    cat /etc/ctl.conf | grep -i '"7"' -A 15 -B 1
+This will give you information such as
+    The iSCSI extent that is used (s2t01e01)
+    Path to the zvol (/dev/zvol/s2z6p01/s2p01z01)
+    Blocksize 512
+    naa number (this can be matched back to ESXi)
+    avail-threshold (23294253352550
+    pool-avail-threshold 460592292823
+To get the actual LUN number that iSCSI is sharing out run
+    cat /etc/ctl.conf | grep s2t01e01
+This will find the LUN number that is shared. You can match this shared LUN ID back to ESXi which is easier than using the naa number
+
+21.4
+
+NAA = Network Address Authority which is the LUN identifier
+ctladm options
+    provisioning_type
+        When UNMAP support is enabled, this option specifies provisioning type: 
+        "resource", "thin" or "unkown". Default value is "thin". Logical units without UNMAP support are reported as fully provisioned
+
+
+ctl-lun 6
+s2t02e02 LUN 22
+s2z6p02
+s2p02z02
+avail-threshold 21374506067558 @ 90%
+avail-threshold 2374945118617 @ 10%
+12 T
+5:23
+CheckFreeSpace(path=/tmp/tmpxlunp46x.pem
+/var/log/middlewared.log
+5:38
+/usr/local/lib/middlewared_truenas
+/usr/local/lib/python3.9/site-packages/middlewared/etc_files/ctld.py
+
+
+esxcfg-volume -M
+6589cfc000000459f4e67f7751bbe307
+/dev/zvol/s2z6p01/s2p01z01
+lun s2t01e01
+23294253352550 avail-threshold
+23529548840448 size of lun
+There is a 235295487898 diff or 214 GiB
+Line 485 drivers/scsi/scsi_error.c
+if (sshdr->asc == 0x38 && sshdr->ascq == 0x07) {
+
+ESXi is reporting an error Space utilization on thin-provisioned device naa.6589cfc000000043f31fed62775242129 exceeded configured threshold. Affected datastores s2lun21
+To view these errors go to Datastore
+Select your LUN, in this case s2lun21
+Go to the Monitor tab
+Go to Tasks and Events and search for any Warning
+To find the size of the LUN on the ESX host go to the Summary tab
+In this case we show that total capacity is 16.94 TB
+To find the LUN number from the name
+Go to Hosts and Clusters
+Select an ESX host that is attached to the LUN
+Go to the Configure tab
+Select Storage Devices
+From here you can compare the naa.XXXX or look at the datastore column and match the name. In our case we are looking at s2lun21 which matches to LUN 21
+ssh to the TrueNAS
+From here we need to identify XXXXX about LUN 21
+cat /etc/ctl.conf
+Looking through this file, we find that LUN 21 is assigned to the extent s2t01e01 on target s2t01
+When examining the exten s2t01e01 we find that
+ctl-lun is 7
+path is /dev/zvol/s2z6p01/s2p01z01
+blocksize is 512
+naa matches
+avail-threshold is set to 23294253352550
+pool-avail-threhold is set to 460592292823
+We now know that the ZFS pool is named s2z6p01 and we can query the status by running
+zpool status -v s2z6p01
+From here we can tell that the pool is currently healthy with no errors
+We can also look at the zvol information by running
+zfs get all s2z6p01/s2p01z01
+The out put of this command tells us:
+used 8.23T
+available 18.8T
+referenced 8.23T
+volsize 21.4T
+refreservation none
+volblocksize 32K
+usedbydataset 8.23T
+written 8.23T
+logicalused 8.73T
+logicalreferenced 8.73T
+
+So we know that VMware has created a VMFS volume of 16.94 TB against a 18.8T LUN. So roughly 90% of the LUN is assigned as a VMFS volume.
+
