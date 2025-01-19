@@ -64,6 +64,7 @@
                         !!pool!!
                         !!size!!
                         !!etc!!
+                        !!/etc/ctl.conf!!
                 </ul>
             </div>
             <div>
@@ -85,10 +86,40 @@
         <hgroup>
             <div>
                 <h2>
-                    <a id ="vcenter_errors">
+                    <a id ="freebsd_errors">
                         Finding FreeBSD Errors
                     </a>
                 </h2>
+                We will assume that we know the LUN number of the iSCSI LUN that is throwing the thin-provisioned errors that VMware ESX can see. In our case it will be LUN 24, but 24 is the share name, not the actual ctl-lun. To find the actual ctl-lun number on the system, we will need to query /etc/ctl.conf.
+                <br><br>
+                <code>
+                    cat /etc/ctl.conf
+                </code>
+                <br><br>
+                In the output of this command, we need to locate the extent of the LUN that we are looking for. In our example case, we see that the line <i>lun "24" "s2t04e04"</i> specifies that LUN 24 is using the extent <i>s2t04e04</i>.
+                <br><br>
+                <a target="_blank" href="pictures/ctl_conf_01.webp">
+                    <img src="pictures/ctl_conf_01.webp" class="css_thumbnail_75" title="A screenshot of a terminal window with the output of cat /etc/ctl.conf cropped to only show the section that contains lun 24. The text reads target 'iqn.2005-10.org.freenas.ctl:s2t04' { alias 's2t04' portal-group 'pg1' 'ag4tg4_4' lun '24' 's2t04e04' }." alt="A screenshot of a terminal window with the output of cat /etc/ctl.conf cropped to only show the section that contains lun 24. The text reads target 'iqn.2005-10.org.freenas.ctl:s2t04' { alias 's2t04' portal-group 'pg1' 'ag4tg4_4' lun '24' 's2t04e04' }.">
+                </a>
+                <br><br>
+                Now that we have the extent (s2t04e04) we can then search the output again for all the information about that extent. In our example case, we see that the section <i>lun "s2t04e04" {</i> specifies the extent information that the clt-lun is actually 5. We will also see that this extent is attached to zPool s2z6p04 and zVol s2p04z04 which we will use later.
+                <br><br>
+                <a target="_blank" href="pictures/ctl_conf_02.webp">
+                    <img src="pictures/ctl_conf_02.webp" class="css_thumbnail_75" title="A screenshot of a terminal window with the output of cat /etc/ctl.conf cropped to only show the section that contains the extent s2t04e04. The text reads lun 's2t04e04' { ctllun '5' path '/dev/zvol/s2z6p04/s2p04z04' blocksize '512' serial '3cecef773e5a005' device-id 'iSCSI Disk 3cecef773e5a005' option 'vendor' 'TrueNAS' option 'product' 'iSCSI Disk' option 'revision' '0123' option 'naa' '0x6589cfc0000008395b75b612d240884b' option 'insecure_tpc' 'on' option 'avail-threshold' '237494511861' option 'rpm' '1' }." alt="A screenshot of a terminal window with the output of cat /etc/ctl.conf cropped to only show the section that contains the extent s2t04e04. The text reads lun 's2t04e04' { ctllun '5' path '/dev/zvol/s2z6p04/s2p04z04' blocksize '512' serial '3cecef773e5a005' device-id 'iSCSI Disk 3cecef773e5a005' option 'vendor' 'TrueNAS' option 'product' 'iSCSI Disk' option 'revision' '0123' option 'naa' '0x6589cfc0000008395b75b612d240884b' option 'insecure_tpc' 'on' option 'avail-threshold' '237494511861' option 'rpm' '1' }.">
+                </a>
+                <br><br>
+                Now that we know the ctl-lun we can query ctladm to pull the capactiy of the ctl-lun. Along with displaying the capacity, this command will display errors on the ctl-lun. You may need to run the command a few times to see the actual error messge. To pull the capacity of the ctl-lun we run
+                <br><br>
+                <code>
+                    ctladm readcap 5
+                </code>
+                <br><br>
+                In the output of the command, we see that there is a <i>Thin provisioning soft threshold reached</i> error message. Please note how we used the ctl-lun number from /etc/ctl.conf so that we are querying the proper ctl-lun.
+                <br><br>
+                <a target="_blank" href="pictures/ctladm_01.webp">
+                    <img src="pictures/ctladm_01.webp" class="css_thumbnail_75" title="A screenshot of a terminal window with the output of ctladm readcap 5. The text reads (7:1:8/8): READ CAPACITY(10). CDB: 25 00 00 00 00 00 00 00 00 00 00 Tag: 0x368/1, Prio: 0 (7:1:8/8): CTL Status: SCSI Error (7:1:8/8): SCSI Status: Check Condition (7:1:8/8): SCSI sense: UNIT ATTENTION asc:37,7 (Thin provisioning soft threshold reached) (7:1:8/8): Info: 0x10." alt="A screenshot of a terminal window with the output of ctladm readcap 5. The text reads (7:1:8/8): READ CAPACITY(10). CDB: 25 00 00 00 00 00 00 00 00 00 00 Tag: 0x368/1, Prio: 0 (7:1:8/8): CTL Status: SCSI Error (7:1:8/8): SCSI Status: Check Condition (7:1:8/8): SCSI sense: UNIT ATTENTION asc:37,7 (Thin provisioning soft threshold reached) (7:1:8/8): Info: 0x10.">
+                </a>
+                <br><br>
                 Badge level 2 consists of a power supply (batteries and battery pack) (BT1), resistors (R#), capacitors (C#), transistors (Q#A), and LEDs (D#) to make a blinking badge.
                 <br>
                 Oooooo
