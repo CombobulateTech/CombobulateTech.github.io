@@ -52,6 +52,25 @@
     a:visited {
         color: #BE90D4;
     }
+    code {
+        font-family: lotion, monospace;
+        background-color: #595959;
+        color: #F4B4B4;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 0.9em;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    code {
+        font-family: lotion, monospace;
+        background-color: #D4D4D4;
+        color: #AD1845;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 0.9em;
+    }
 }
 
 body {
@@ -128,3 +147,4 @@ body {
 .homeButton:hover {
     background-color: #89C4F4;
 }
+
