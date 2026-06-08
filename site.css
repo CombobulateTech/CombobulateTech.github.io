@@ -46,19 +46,37 @@
         color: #D4D4D4;
         background: #333333;
     }
+
     a:link {
         color: #89C4F4;
     }
+
     a:visited {
         color: #BE90D4;
     }
+
     code {
         font-family: lotion, monospace;
         background-color: #595959;
         color: #F4B4B4;
         padding: 1px 5px;
         border-radius: 3px;
-        font-size: 0.9em;
+        font-size: 0.8em;
+    }
+    
+    .code-header {
+        font-family: lotion, monospace;
+        color: #D4D4D4;
+        font-size: 0.7em;
+    }
+
+    pre {
+        background-color: #595959;
+        color: #F4B4B4;
+        padding: 3px;
+        border-radius: 5px;
+        overflow-x: auto;
+        line-height: .9;
     }
 }
 
@@ -69,7 +87,22 @@
         color: #AD1845;
         padding: 1px 5px;
         border-radius: 3px;
-        font-size: 0.9em;
+        font-size: 0.8em;
+    }
+
+    .code-header {
+        font-family: lotion, monospace;
+        color: #000000;
+        font-size: 0.7em;
+    }
+
+    pre {
+        background-color: #D4D4D4;
+        color: #AD1845;
+        padding: 3px;
+        border-radius: 5px;
+        overflow-x: auto;
+        line-height: .9;
     }
 }
 
