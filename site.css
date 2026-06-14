@@ -1,36 +1,31 @@
-@media (min-width: 901px) {
-    html {
-        font-size: 2vw;
-    }
+:root {
+    color-scheme: light dark;
 }
 
-@media (min-width: 701px) and (max-width: 900px) {
-    html {
-        font-size: 3vw;
-    }
-}
- 
-@media (max-width: 700px) {
-    html {
-        font-size: 4vw;
-    }
+html {
+    font-size: clamp(1.05rem, 0.5rem + 1.6vw, 3rem);
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-Regular.woff2)
+    src: url(fonts/Lotion-Regular.woff2);
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
     src: url(fonts/Lotion-RegularItalic.woff2);
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
     src: url(fonts/Lotion-Black.woff2);
     font-weight: bold;
+    font-display: swap;
 }
 
 @font-face {
@@ -38,11 +33,30 @@
     src: url(fonts/Lotion-BlackItalic.woff2);
     font-style: italic;
     font-weight: bold;
+    font-display: swap;
+}
+
+code {
+    font-family: lotion, monospace;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+.code-header {
+    font-family: lotion, monospace;
+    font-size: 0.7em;
+}
+
+pre {
+    padding: 3px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.0;
 }
 
 @media (prefers-color-scheme: dark) {
     body {
-        font-family: lotion;
         color: #D4D4D4;
         background: #333333;
     }
@@ -56,53 +70,37 @@
     }
 
     code {
-        font-family: lotion, monospace;
         background-color: #595959;
         color: #F4B4B4;
-        padding: 1px 5px;
-        border-radius: 3px;
-        font-size: 0.8em;
     }
     
     .code-header {
-        font-family: lotion, monospace;
         color: #D4D4D4;
-        font-size: 0.7em;
     }
 
     pre {
         background-color: #595959;
         color: #F4B4B4;
-        padding: 3px;
-        border-radius: 5px;
-        overflow-x: auto;
-        line-height: .9;
     }
 }
 
 @media (prefers-color-scheme: light) {
+    body {
+        color: CanvasText;
+        background: Canvas;
+    }
     code {
-        font-family: lotion, monospace;
         background-color: #D4D4D4;
         color: #AD1845;
-        padding: 1px 5px;
-        border-radius: 3px;
-        font-size: 0.8em;
     }
 
     .code-header {
-        font-family: lotion, monospace;
         color: #000000;
-        font-size: 0.7em;
     }
 
     pre {
         background-color: #D4D4D4;
         color: #AD1845;
-        padding: 3px;
-        border-radius: 5px;
-        overflow-x: auto;
-        line-height: .9;
     }
 }
 
