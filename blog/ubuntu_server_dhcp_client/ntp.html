@@ -141,11 +141,11 @@ OPTION_224=4647313045305442323239303031363600
                         <br>
 
                         There are few network / IP managers that could be in use. We will go through each of the network / IP managers (dhclient, NetworkManager, networkd), to track down which is installed and running. To do this, we will use <i>systemctl</i> to check if the service is running. Let's get to it. In this case, the following checks return nothing, so they are not running or possibly not installed.
-                        <br><br>
-                        <code>systemctl list-units --full -all | grep "dhclient"</code>
-                        <br><br>
-                        <code>systemctl list-units --full -all | grep "NetworkManager"</code>
-                        <br><br>
+
+                        <pre><code>systemctl list-units --full -all | grep "dhclient"</code></pre>
+
+                        <pre><code>systemctl list-units --full -all | grep "NetworkManager"</code></pre>
+
                         And we have a winner with <i>systemd-networkd</i>:
 
                         <pre><code><div class="code-header">(bash) systemctl list-units --full -all | grep "systemd-networkd.service"</div>
@@ -185,9 +185,9 @@ exit 0
                         Hmmm, interesting, this script appears to check to see if chronyd exists (<i> [ -x /usr/sbin/chronyd ]</i>), if not it exits. Then it checks to see if there is a chronyd.pid that is running. Basically it looks to see if chronyd is installed and running and if so it runs <i>chronyc onoffline</i>. While all of this is well and good, this does not appear to actually try to create the elusive /run/chrony-dhcp. Let's move on.
                         <br><br>
                         The next thing that we need to check are the networkd-dispatcher scripts to see if they house the solution that we are looking for. We will follow a similar process and check to see if there are any scripts that we can examine first.
-                        <br><br>
-                        <code> ls /etc/networkd-dispatcher/routable.d/</code>
-                        <br><br>
+
+                        <pre><code> ls /etc/networkd-dispatcher/routable.d/</code></pre>
+
                         And based on the no output from our list command, there aren't any networkd-dispatcher scripts that are being executed.
                         <br><br>
                         Well, now we are in a conundrum, there aren't any ifupdown scripts that use DHCP NTP options, and there aren't any networkd-dispatcher scripts either. Just out of curiosity, let's take a look and see if there are any NetworkManager dispatcher scripts. Yes, we already verified earlier that we aren't using NetworkManager, but some packages will install NetworkManager scripts, even if NetworkManager is not installed itself.
@@ -251,11 +251,11 @@ exit 0
                         </code></pre>
 
                         Wow, this looks exactly like what we are looking for. Reading through this script, it appears that this script will create the <i>/run/chrony-dhcp</i> and load the file with all of the NTP servers from DHCP using either <i>$DHCP4_NTP_SERVERS</i> or <i>$DHCP6_DHCP6_NTP_SERVERS</i>. But wait, if we read the top of the script, it says that those two variables are assigned by NetworkManager. Just to double check, let's see if those variables exist in the OS.
-                        <br><br>
-                        <code>echo $DHCP4_NTP_SERVERS</code>
-                        <br><br>
-                        <code>echo $DHCP6_DHCP6_NTP_SERVERS</code>
-                        <br><br>
+
+                        <pre><code>echo $DHCP4_NTP_SERVERS</code></pre>
+
+                        <pre><code>echo $DHCP6_DHCP6_NTP_SERVERS</code></pre>
+
                         Yup, it does look like those variables are assigned by NetworkManager before the script is executed, as both of them are empty. So at this point we have hit a bit of a dead end with what is configured by the OS and the different packages.
                         <br><br>
                         You can read more about this dead end <a href="https://www.mail-archive.com/chrony-dev@chrony.tuxfamily.org/msg02177.html">here</a>.
@@ -335,13 +335,13 @@ fi
                         A quick run down of this script, first it checks to see if the <i>/run/chrony-dhcp</i> directory exists, and if not, it creates it. Then it pulls the ifindex from <i>/sys/class/net/$IFACE/ifindex</i>. $IFACE is submitted by networkd-dispatcher when the script is executed. Then it pulls the lease information for that ifindex <i>/run/systemd/netif/leases/$ifindex</i> and parses the NTP information. Finally, it copies the NTP server info into /run/chrony-dhcp and reloads the sources for chrony.
                         <br><br>
                         If you copy this script over to <i>/etc/networkd-dispatcher/routable.d/</i>, and set the proper permissions, then it should execute every time there is an interface change.
-                        <br><br>
-                        <code>cp 20-chrony-dhcp /etc/networkd-dispatcher/routable.d/</code>
-                        <br><br>
-                        <code>chown root:root /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code>
-                        <br><br>
-                        <code>chmod 755 /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code>
-                        <br><br>
+
+                        <pre><code>cp 20-chrony-dhcp /etc/networkd-dispatcher/routable.d/</code></pre>
+
+                        <pre><code>chown root:root /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code></pre>
+
+                        <pre><code>chmod 755 /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code></pre>
+
                         To verify that everything is running correctly, just check <i>chronyc</i> again.
 
                         <pre><code><div class="code-header">(bash) chronyc sources</div>
@@ -354,7 +354,21 @@ MS Name/IP address          Stratum Poll Reach LastRx Last sample
 ^+ ntp-nts-1.ps5.canonical.>      2  10   377    62   +615us[ +615us] +/-   71ms
 ^+ _gateway                       3   6   377    41  -2765us[-2740us] +/-   63ms
                         </code></pre>
+
+                        If you notice we now have <i>_gateway</i> added to the list. In our case here <i>10.190.64.1</i> is the gateway, so this is correct. But you will notice that all of the other default NTP servers still exist. *sigh* this is because <i>chrony</i> is reading from all sources (<i>/run/chrony-dhcp</i>, <i>/etc/chrony/sources.d</i>). A non-destructive quick fix is to rename the default source in <i>/etc/chrony/sources.d</i>
+
+                        <pre><code>mv /etc/chrony/sources.d/ubuntu-ntp-pools.sources /etc/chrony/sources.d/ubuntu-ntp-pools.sources.old</code></pre>
+                        <pre><code>chronyc reload sources</code></pre>
+
+                        Chrony will only read files with a <i>.sources</i> extension. By just renaming the file to <i>.old</i> it will stop using it as a default source. We then just reload the sources really quick, and voila, we now only have one entry in our NTP sources list.
+                        <br><br>
+                        One last quick note, since we removed the default NTP servers from <i>chrony</i> that means that if DHCP quits sending out NTP (Option 042), then the server will not have any NTP servers to query. If this were to happen, the quick fix is to just rename <i>/etc/chrony/sources.d/ubuntu-ntp-pools.sources.old</i> back, by removing the <i>.old</i> extension. Then just reload the <i>chrony</i> sources again.
                         
+                        <pre><code><div class="code-header">(bash) chronyc sources</div>
+MS Name/IP address          Stratum Poll Reach LastRx Last sample
+================================================================================
+^+ _gateway                       3   6   377     8  +1545us[ +706us] +/-   64ms
+                        </code></pre>
                     </li>
                 </ul>
                 <h2>
