@@ -264,11 +264,11 @@ network:
                         By adding the section <i>dhcp4-overrides:</i> we are telling netplan that we want to forcibly override some of the default configurations, in our case, we want to specify <i>use-domains: true</i>. This says that we should use the domain information supplied by DHCP.
                         <br>
                         After making changes to netplan, you need to be sure to <i>generate</i> and to <i>apply</i> those changes.
-                        <br>
-                        <code>netplan generate</code>
-                        <br>
-                        <code>netplan apply</code>
-                        <br>
+
+                        <pre><code>netplan generate</code></pre>
+
+                        <pre><code>netplan apply</code></pre>
+
                         Please note that the preceding two commands don't have any output. But if we made the edits properly, then we should be able to test and everything should magically work.
 
                         <pre><code><div class="code-header">(bash) ping perforce</div>
