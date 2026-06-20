@@ -82,6 +82,14 @@ pre {
         background-color: #595959;
         color: #F4B4B4;
     }
+
+    details > summary {
+        color: #89C4F4;
+    }
+
+    details > summary:focus-visible {
+        color: #89C4F4;
+    }
 }
 
 @media (prefers-color-scheme: light) {
@@ -89,6 +97,15 @@ pre {
         color: CanvasText;
         background: Canvas;
     }
+
+    a:link {
+        color: #0000EE;
+    }
+
+    a:visited {
+        color: #551A8B;
+    }
+
     code {
         background-color: #D4D4D4;
         color: #AD1845;
@@ -102,6 +119,14 @@ pre {
         background-color: #D4D4D4;
         color: #AD1845;
     }
+
+    details > summary {
+        color: #0000EE;
+    }
+
+    details > summary:focus-visible {
+        color: #0000EE;
+    }
 }
 
 body {
@@ -110,7 +135,6 @@ body {
 
 details > summary {
     list-style: none;
-    color: #89C4F4;
     text-decoration: underline;
     cursor: pointer;
 }
