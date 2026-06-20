@@ -8,7 +8,7 @@ html {
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-Regular.woff2);
+    src: url(/fonts/Lotion-Regular.woff2);
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -16,24 +16,38 @@ html {
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-RegularItalic.woff2);
+    src: url(/fonts/Lotion-RegularItalic.woff2);
     font-style: italic;
     font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-Black.woff2);
+    src: url(/fonts/Lotion-Black.woff2);
     font-weight: bold;
     font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-BlackItalic.woff2);
+    src: url(/fonts/Lotion-BlackItalic.woff2);
     font-style: italic;
     font-weight: bold;
     font-display: swap;
+}
+
+@font-face {
+    font-family: lotion;
+    src: url(/fonts/NotoSansJP-greetings.woff2);
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    unicode-range:
+        U+3000-303F,   /* punctuation */
+        U+3040-309F,   /* hiragana */
+        U+30A0-30FF,   /* katakana */
+        U+FF00-FFEF,   /* full-width roman / half-width kana */
+        U+4E00-9FFF;   /* common kanji (CJK Unified Ideographs) */
 }
 
 code {
