@@ -106,6 +106,44 @@ pre {
 
 body {
     font-family: lotion;
+
+    details > summary {
+        list-style: none;
+        color: #89C4F4;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    details > summary:focus-visible {
+        outline: 2px solid #89C4F4;
+        outline-offset: 2px;
+    }
+
+    details > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    details > summary::before {
+        content: "+";
+        text-decoration: none;
+        display: inline-block;
+        padding-right: 4px;
+    }
+
+    details[open] > summary::before {
+        content: "-";
+    }
+
+    nav .link_menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
 }
 
 .css_center {
