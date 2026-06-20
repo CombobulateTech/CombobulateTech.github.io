@@ -23,21 +23,19 @@
                 </h2>
             </div>
             <div>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>Problem Description</b>
                         <br>
                         When using the default configuration of TrueNAS to setup an iSCSI shared LUN, the iSCSI extent will generate <b>Thin provisioning soft threshold reached</b> errors. The LUN can and will report dozens, or hundreds, possibly thousands of these errors, flooding the logs of the systems accessing the LUN. In this case it was VMware vCenter logging thousands of messages a day (Space utilization on thin-provisioned device naa.xxx exceeded configured threshold). This problem exists on TrueNAS version 12.0-U8.1 and 13.0-U6.4.
                         <br><br>
                         It took us a couple of months of troubleshooting before we were able to locate what was causing the problem. This blog post details what we learned, the commands that we tried, and finally the solution.
-                        <br><br>
                     </li>
                     <li>
                         <b>TLDR</b>
                         <br>
                         Fear not, our goal isn't to keep you trapped on this site forcing you to read the whole thing to find the answer. In the next <a href="#tldr">section</a> we will post the simple config change to prevent the error.
                     </li>
-                    <br>
                     <li>
                         <b>Why This is a Problem</b>
                         <br>
@@ -45,7 +43,6 @@
                         <br>
                         For example, we could build a new VM with 100 GB of storage assigned to it, but only have a 25 GB drive attached. So we thin provisioned another 75 GB of space above and beyond what the physical drive contains. We invented the extra space and are lying to the VM, telling it that it has more storage than it actually does. The problem with thin provisioning is, if we tried to write 26 GB of data to that server, the server would probably crash, because there is no place to actually write that much data to. To prevent servers from crashing, we would setup thin provisioning thresholds to alert us when the storage was getting too full. For example, at 80% of total storage usage, we would start to generate errors and send out notifications, so that we have time to add more actual storage to the thin provisioned storage, hopefully preventing a crash because we ran out of storage. The error messages that we are receiving, are the warnings that we have reached or gone past that threshold.
                     </li>
-                    <br>
                 </ul>
             </div>
             <div>
@@ -72,7 +69,7 @@
                         Commands
                     </a>
                 </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>ctladm lunlist</b>
                         <br>
@@ -141,7 +138,7 @@
                        Finding the Errors
                    </a>
                </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <a id="vcenter_errors">
                             <b>Finding vCenter Errors</b>
@@ -157,7 +154,6 @@
                             <img src="pictures/vmware_events.webp" class="css_thumbnail_75" title="A screenshot of vCenter, showing the Datastore, Monitor, Tasks and Events, Events section expanded out, with the error message about Space Utilization displayed in detail." alt="A screenshot of vCenter, showing the Datastore, Monitor, Tasks and Events, Events section expanded out, with the error message about Space Utilization displayed in detail.">
                         </a>
                     </li>
-                    <br>
                     <li>
                         <a id="zfs_errors">
                             <b>Finding ZFS Errors</b>
@@ -203,7 +199,6 @@ Jun 14 2026 00:00:01.096587179 sysevent.fs.zfs.scrub_finish
 
                         These were the last events that were logged, and there are no errors that have been generated. This log is just showing the start and finish of a pool scrub, which is perfectly normal. So it looks like we need to search elsewhere for our errors.
                     </li>
-                    <br>
                     <li>
                         <a id="scsi_errors">
                             <b>Finding SCSI Errors</b>
@@ -342,7 +337,7 @@ Disk Capacity: 124644229183, Blocksize: 512
                 <h2>
                     Verify Space
                 </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>Description</b>
                         <br>
@@ -350,25 +345,21 @@ Disk Capacity: 124644229183, Blocksize: 512
                         <br><br>
                         Note, we have already verified that the errors exist on the SAN (reported by SCSI), so we will focus on the SAN and ignore VMware for now.
                     </li>
-                    <br>
                     <li>
                         <b>ZFS Primer</b>
                         <br>
                         We won't go into a ton of detail on ZFS (Zettabyte File System). You can read more about it here in this <a href="https://digitalelf.net/2023/10/128-bit-storage-are-you-high/">article</a>.
                         <br><br>
-                        <ul>
+                        <ul class="list_extra_space">
                             <li>
                                 <b>vdev (Virtual Devices):</b> These are block devices that are built with files, partitions, or entire disks. It is recommended to use entire disks.
                             </li>
-                            <br>
                             <li>
                                 <b>RAIDZ (Redundant Array of Inexpensive Disks for ZFS):</b> These are used to combine disks into a single vdev. We can use these to create one big storage drive that has no redundancy, or has multiple disk fail over redundancy.
                             </li>
-                            <br>
                             <li>
                                 <b>zpool (ZFS Pool):</b> These are the logical grouping of vdev's. When creating a zpool you specify how many vdev's, where the vdev's are located, and what RAIDZ to use.
                             </li>
-                            <br>
                             <li>
                                 <b>zvol (ZFS Volume):</b> These are virtual volumes that represent block devices.
                             </li>
@@ -429,7 +420,6 @@ errors: No known data errors
 
                         As we can see from the output, we have 3 pools. The first pool is just the <i>boot-pool</i> which contains the OS. The second pool is named s1z6p01 and it contains 6 drives configured in a RAIDZ-2. And the third pool is named s1z6p02 and it contains 6 drives also configured in a RAIDZ-2.
                     </li>
-                    <br>
                     <li>
                         <b>Drive / vdev Information</b>
                         <br>
@@ -554,7 +544,6 @@ Providers:
 
                         There is a lot of information here. The big things to pay attention to are the <i>Name</i> (device name), <i>Mediasize</i> (drive size), <i>descr</i> (drive model), and <i>ident</i> (drive serial number). We won't go into all of the details now, but we will reference back to these numbers in other sections.
                     </li>
-                    <br>
                     <li>
                         <b>Determine ZFS Space / Usage</b>
                         <br>
@@ -673,7 +662,7 @@ s1z6p01  special_small_blocks  0                      default
                 <h2>
                     Troubleshoot iSCSI
                 </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>ctladm configs</b>
                         <br>
@@ -809,7 +798,6 @@ LUN Backend      Size (Blocks)    BS Serial Number    Device ID
 
                         Huzzah! No more errors. If we go back into VMware, we should also see that there are no more thin-provisioning errors being generated either.
                     </li>
-                    <br>
                     <li>
                         <b>Closing Notes</b>
                         <br>

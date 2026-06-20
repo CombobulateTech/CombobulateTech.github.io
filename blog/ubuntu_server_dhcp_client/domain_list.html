@@ -31,7 +31,7 @@
                 <h2>
                     Troubleshooting Steps
                 </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>Identify the Problem</b>
                         <br>
@@ -136,7 +136,6 @@ Current DNS Server: 10.190.64.1
                         Now, looking at this output, we see that the question is the same, which shows that it did not add a domain name to the hostname. But we also see there is a new <i>AUTHORITY SECTION</i>. This tells us that our DNS server <i>10.190.64.1</i> had no record for <i>perforce.</i>, so it reached out to the Internet (in this case <i>a.root-servers.net</i>) to see if that DNS server had a record (which it did not). The other piece to note, is the <i>SERVER: 10.190.64.1#53(10.190.64.1) (UDP)</i>, this shows that the query was not processed locally (127.0.0.53) but instead was sent specifically to the DNS server that we told it to.
                         <br><br>
                         So we have now verified that the problem does exist. We know that whether we query the local DNS (<i>127.0.0.53</i>) or directly query the primary DNS server (<i>10.190.64.1</i>) that the domain is not populated. So the next part is to verify DHCP Lease information, and slightly more advanced DNS configs.
-                        <br><br>
                     </li>
                     <li>
                         <b>Verify DHCP Lease and Advanced Configs</b>
@@ -221,8 +220,6 @@ OPTION_224=4647313045305442323239303031363600
                         </code></pre>
 
                         And now we find the culprit. Even though the UseDomains=no line is commented out, it still means that this is the default config. This works like SSHD, where commented out lines just mean that is the default the system uses. So, by default, UseDomains is disabled, which disables the domain search list that is provided by DHCP. At the time of this writing, I was unable to find any documentation that this change was made, but if you compare a fresh install of 24.04 to 26.04 you will see that the defaults have changed.
-                        <br><br>
-
                     </li>
                     <li>
                         <b>Solving the Problem</b>

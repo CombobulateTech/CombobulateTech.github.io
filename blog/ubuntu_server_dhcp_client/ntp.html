@@ -31,7 +31,7 @@
                 <h2>
                     Troubleshooting Steps
                 </h2>
-                <ul>
+                <ul class="list_extra_space">
                     <li>
                         <b>Identify the NTP Client and Verify the Problem</b>
                         <br>
@@ -134,7 +134,6 @@ OPTION_224=4647313045305442323239303031363600
                         </code></pre>
 
                         Based on this information, it does look like the NTP information is being sent by the DHCP server. We have now verified the NTP server is <i>NTP=10.190.64.1</i>. So now we just need to figure out why that information isn't being copied to <i>/run/chrony-dhcp</i>.
-                        <br><br>
                     </li>
                     <li>
                         <b>Verify Network / IP Managers</b>
@@ -153,7 +152,6 @@ OPTION_224=4647313045305442323239303031363600
                         </code></pre>
 
                         In this case, it appears that we are running systemd-networkd as the network manager.
-                        <br><br>
                     </li>
                     <li>
                         <b>Check Dispatcher and ifupdown hook scripts</b>
@@ -259,7 +257,6 @@ exit 0
                         Yup, it does look like those variables are assigned by NetworkManager before the script is executed, as both of them are empty. So at this point we have hit a bit of a dead end with what is configured by the OS and the different packages.
                         <br><br>
                         You can read more about this dead end <a href="https://www.mail-archive.com/chrony-dev@chrony.tuxfamily.org/msg02177.html">here</a>.
-                        <br><br>
                     </li>
                     <li>
                         <b>Build a Custom Solution</b>
