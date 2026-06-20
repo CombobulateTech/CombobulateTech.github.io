@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="site.css">
     </head>
     <body class="css_center">
-        <header>
+        <header id="top">
             <a href="https://combobulate.tech">
                 <picture>
                     <source srcset="pictures/Combobulate_Light.svg" media="(prefers-color-scheme: dark)">
@@ -16,14 +16,14 @@
             <nav>
                 <ul class="link_menu">
                     <li>
-                        <details name="nav-main">
+                        <details name="nav-header">
                             <summary>Site</summary>
                             <ul>
                                 <li>
                                     <a href="https://combobulate.tech">Home</a>
                                 </li>
                                 <li>
-                                    <a href="https://combobulate.tech/toc.html">TOC</a>
+                                    <a href="/toc.html">TOC</a>
                                 </li>
                                 <li>
                                     <a href="/blog/darknet13/darknet13_badge.html">Darknet 13 Badge</a>
@@ -44,7 +44,7 @@
                         </details>
                     </li>
                     <li>
-                        <details name="nav-main">
+                        <details name="nav-header">
                             <summary>Page</summary>
                             <ul>
                                 <li>
@@ -54,7 +54,7 @@
                         </details>
                     </li>
                     <li>
-                        <details name="nav-main">
+                        <details name="nav-header">
                             <summary>Contact Us</summary>
                             <ul>
                                 <li>
@@ -69,12 +69,12 @@
                 </ul>
             </nav>
         </header>
-        <div id="top">
+        <div>
             <h1 class="css_center_text">
                 About Us
             </h1>
             <p>
-                Hi
+                <span lang="ja">ようこそ</span> <small>(Welcome)</small>
                 <br><br>
                 We (Royal) are a small consulting firm that has been in the industry since the 90s. Throughout the decades, we have had different names and different specialties. In the 90s we were a web design company, in the 00s we were a security consulting firm, and in the 10s we were an IT consulting company. We have worn different hats throughout the decades, but they have always been technical, and cutting edge. Today, we mostly do VR consulting, with some IT consulting on the side.
                 <br><br>
@@ -88,6 +88,32 @@
                 We hope that you enjoy your stay, learn something cool, and let your imagination run wild with possibilities.
             </p>
         </div>
+        <footer>
+            <nav>
+                <ul class="link_menu">
+                    <li>
+                        <a href="https://combobulate.tech">
+                            <picture>
+                                <source srcset="pictures/Combobulate_Light_Mini.svg" media="(prefers-color-scheme: dark)">
+                                <img src="pictures/Combobulate_Dark_Mini.svg" alt="Mini Combobulate Company Logo">
+                            </picture>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/toc.html">TOC</a>
+                    </li>
+                    <li>
+                        <a href="#top">Top</a>
+                    </li>
+                    <li>
+                        <a href="/about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="mailto:info@combobulate.tech">Contact Us</a>
+                    </li>
+                </ul>
+            </nav>
+        </footer>
         <div id="bottom"></div>
         <button class="topButton">
             <a href="#top">
