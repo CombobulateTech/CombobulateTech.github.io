@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Ubuntu 26.04 Server DHCP Client Domain Search List</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../site.css">
+        <link rel="icon" type="image/svg+xml" href="/pictures/Combobulate_Dark_Mini.svg">
+    </head>
+    <body class="css_center">
+        <header id="top">
+            <a href="https://combobulate.tech">
+                <picture>
+                    <source srcset="/pictures/Combobulate_Light.svg" media="(prefers-color-scheme: dark)">
+                    <img src="/pictures/Combobulate_Dark.svg" alt="Combobulate Company Logo">
+                </picture>
+            </a>
+            <nav>
+                <ul class="link_menu">
+                    <li>
+                        <details name="nav-header">
+                            <summary>Site</summary>
+                            <ul>
+                                <li>
+                                    <a href="https://combobulate.tech">Home</a>
+                                </li>
+                                <li>
+                                    <a href="/toc.html">TOC</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/darknet13/darknet13_badge.html">Darknet 13 Badge</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/darknet13/darknet13_badge_assembly.html">Darknet 13 Badge Assembly</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/iscsi_thin_provisioning/iscsi_thin_provisioning.html">iSCSI Thin Provisioning</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/ubuntu_server_dhcp_client/domain_list.html">Ubuntu DHCP Client Domain List</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/ubuntu_server_dhcp_client/ntp.html">Ubuntu DHCP Client NTP</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details name="nav-header">
+                            <summary>Page</summary>
+                            <ul>
+                                <li>
+                                    <a href="#bottom">Bottom</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details name="nav-header">
+                            <summary>Contact Us</summary>
+                            <ul>
+                                <li>
+                                    <a href="/about.html">About</a>
+                                </li>
+                                <li>
+                                    <a href="mailto:info@combobulate.tech">E-Mail</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <div>
+            <hgroup class="css_center_text">
+                <h1>
+                    Ubuntu 26.04 Server DHCP Client Domain Search List
+                </h1>
+                <p>
+                    <small>
+                        Posted on June 08, 2026
+                    </small>
+                </p>
+            </hgroup>
+            <div>
+                <h2>
+                    Problem Description
+                </h2>
+            </div>
+            <div>
+                I found that a fresh install of Ubuntu 26.04 server, by default, no longer uses the domain search list (DHCP Option 119) supplied by DHCP. This prevents the use of hostnames and forces the use of an FQDN (Fully Qualified Domain Name). For example, rather than <code>ping perforce</code> you have to <code>ping perforce.combobulate.test</code>
+                <br>
+                While it is possible to use the FQDN for all communications, it can be tedious to always enter it in. It is also possible to set the search domain on the OS as well, but that removes the dynamic capability of updates through DHCP. Plus, all of this worked fine on a fresh install of Ubuntu 24.04 server without issue.
+            </div>
+            <div>
+                <h2>
+                    Troubleshooting Steps
+                </h2>
+                <ul class="list_extra_space">
+                    <li>
+                        <b>Identify the Problem</b>
+                        <br>
+                        Let's walk through using tools like <i>ping</i> and <i>dig</i> to verify there actually is a problem.
+                        <br>
+                        The first thing that we should try is <i>ping</i> (Packet InterNet Groper). We will use this to verify that we do have network connectivity, and prove that we are unable to connect to a server using just the hostname.
+
+                        <pre><code><div class="code-header">(bash) ping perforce</div>
+ping: perforce: Temporary failure in name resolution
+                            </code></pre>
+
+                        As you can see from the output, it is unable to resolve the hostname perforce. This could be a simple DNS server problem, so let's check to see what DNS server Ubuntu is pointed at. First I check what is in the resolv.conf file. Yeah, yeah, I know this has been deprecated in Ubuntu, but old habits die hard, and Ubuntu isn't the only distro that I run.
+
+                        <pre><code><div class="code-header">(bash) cat /etc/resolv.conf</div>
+# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).
+# Do not edit.
+#
+# This file might be symlinked as /etc/resolv.conf. If you're looking at
+# /etc/resolv.conf and seeing this text, you have followed the symlink.
+#
+# This is a dynamic resolv.conf file for connecting local clients to the
+# internal DNS stub resolver of systemd-resolved. This file lists all
+# configured search domains.
+#
+# Run "resolvectl status" to see details about the uplink DNS servers
+# currently in use.
+#
+# Third party programs should typically not access this file directly, but only
+# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a
+# different way, replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.service(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 127.0.0.53
+options edns0 trust-ad
+search .
+                        </code></pre>
+
+                        There are two lines in here that we should pay attention to <i>nameserver 127.0.0.53</i> and <i>search .</i> . The first one shows that Ubuntu is using a local lookup for all DNS queries, which has been standard for a while. The second one specifies the search domain, but it is just <i>.</i> which is the top level domain.
+                        <br>
+                        In Ubuntu, to see which DNS server is actually being used we will use <i>resolvectl</i>. This will tell us exactly which DNS server is being used.
+
+                        <pre><code><div class="code-header">(bash) resolvectl status</div>
+Global
+         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+  resolv.conf mode: stub
+
+Link 2 (eno1)
+    Current Scopes: DNS
+         Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported
+Current DNS Server: 10.190.64.1
+       DNS Servers: 10.190.64.1
+     Default Route: yes
+                        </code></pre>
+
+                        In this case, we are using the DNS server at <i>10.190.64.1</i>. Now that we know which DNS server we are using, we can proceed with testing things with <i>dig</i>. We will use <i>dig</i> to query the DNS server and read its responses. First, let's run <i>dig</i> without specifying the DNS server, just to see what happens.
+
+                        <pre><code><div class="code-header">(bash) dig perforce</div>
+; <<>> DiG 9.20.18-1ubuntu2.1-Ubuntu <<>> perforce
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: REFUSED, id: 21026
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;perforce.              IN      A
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Mon Jun 08 18:35:40 UTC 2026
+;; MSG SIZE rcvd: 37
+                        </code></pre>
+
+                        Note how the <i>QUESTION SECTION:</i> says <i>;perforce. IN A</i>, this shows that there is no search domain that is added to the hostname that we tried. Also notice how the <i>SERVER: 127.0.0.53#53(127.0.0.53) (UDP)</i> is used, so we need to make sure that we pull the proper info from the proper DNS server. So let's run the same query except against the actual DNS server.
+
+                        <pre><code><div class="code-header">(bash) dig perforce @10.190.64.1 +search</div>
+; <<>> DiG 9.20.18-1ubuntu2.1-Ubuntu <<>> perforce @10.190.64.1 +search
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 27564
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;perforce.              IN      A
+
+;; AUTHORITY SECTION:
+.               86400   IN      SOA a.root-servers.net. nstld.verisign-grs.com. 2026060802 1800 900 604800 86400
+
+;; Query time: 45 msec
+;; SERVER: 10.190.64.1#53(10.190.64.1) (UDP)
+;; WHEN: Mon Jun 08 22:30:12 UTC 2026
+;; MSG SIZE rcvd: 112
+                        </code></pre>
+
+                        First, let's go over the command. We are using the same <i>dig</i> command, but we added an <i>@10.190.64.1</i> this specifies that <i>dig</i> should send the query directly to the DNS server, in this case <i>10.190.64.1</i>. We also added another parameter, the <i>+search</i>, without this parameter dig would not try and use a domain search list, even if one was configured. So by adding the <i>+search</i> that tells dig to at least attempt to find a domain to attach.
+                        <br>
+                        Now, looking at this output, we see that the question is the same, which shows that it did not add a domain name to the hostname. But we also see there is a new <i>AUTHORITY SECTION</i>. This tells us that our DNS server <i>10.190.64.1</i> had no record for <i>perforce.</i>, so it reached out to the Internet (in this case <i>a.root-servers.net</i>) to see if that DNS server had a record (which it did not). The other piece to note, is the <i>SERVER: 10.190.64.1#53(10.190.64.1) (UDP)</i>, this shows that the query was not processed locally (127.0.0.53) but instead was sent specifically to the DNS server that we told it to.
+                        <br><br>
+                        So we have now verified that the problem does exist. We know that whether we query the local DNS (<i>127.0.0.53</i>) or directly query the primary DNS server (<i>10.190.64.1</i>) that the domain is not populated. So the next part is to verify DHCP Lease information, and slightly more advanced DNS configs.
+                    </li>
+                    <li>
+                        <b>Verify DHCP Lease and Advanced Configs</b>
+                        <br>
+                        Here we will check what DHCP lease information the server is receiving to make sure the DHCP server is actually handing out the proper information. Then, if that is correct, we will dig deeper into the DNS and network configs of the Ubuntu server to try and figure out why it's not using the info from the DHCP server. We will use things like <i>cat</i>, and <i>systemd-analyze</i> to delve deeper into the networking stack.
+                        <br><br>
+                        Let's go take a look at what DHCP information this Ubuntu server is pulling from the DHCP server. This one is actually pretty simple, we will just <i>cat</i> all of the files in the leases directory.
+
+                        <pre><code><div class="code-header">(bash) cat /run/systemd/netif/leases/*</div>
+# This is private data. Do not parse.
+ADDRESS=10.190.64.24
+NETMASK=255.255.255.0
+ROUTER=10.190.64.1
+SERVER_ADDRESS=10.190.64.1
+T1=3d 12h
+T2=6d 3h
+LIFETIME=1w
+DNS=10.190.64.1
+NTP=10.190.64.1
+DOMAINNAME=combobulate.test
+DOMAIN_SEARCH_LIST=combobulate.test
+CLIENTID=ffb6220feb00020000ab118179be1a8cd8138f
+OPTION_224=4647313045305442323239303031363600
+                        </code></pre>
+
+                        This clearly shows that Ubuntu is receiving the <i>DOMAINNAME</i> and the <i>DOMAIN_SEARCH_LIST</i> as well. So Ubuntu has the correct information from the DHCP server, but it isn't being used. let's go and find where and / or what is blocking Ubuntu from using it.
+                        <br>
+                        If the server is receiving all of the appropriate info, then something is blocking it. let's go take a look at <i>networkd.conf</i> and see if we can get to the root of the problem. We will use the <i>systemd-analyze</i> command just because I feel fancy right now. You could just as easily <i>cat /etc/systemd/networkd.conf</i> to get the same information.
+
+                        <pre><code><div class="code-header">(bash) systemd-analyze cat-config systemd/networkd.conf</div>
+# /etc/systemd/networkd.conf
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it under the
+#  terms of the GNU Lesser General Public License as published by the Free
+#  Software Foundation; either version 2.1 of the License, or (at your option)
+#  any later version.
+#
+# Entries in this file show the compile time defaults. Local configuration
+# should be created by either modifying this file (or a copy of it placed in
+# /etc/ if the original file is shipped in /usr/), or by creating "drop-ins" in
+# the /etc/systemd/networkd.conf.d/ directory. The latter is generally
+# recommended. Defaults can be restored by simply deleting the main
+# configuration file and all drop-ins located in /etc/.
+#
+# Use 'systemd-analyze cat-config systemd/networkd.conf' to display the full config.
+#
+# See networkd.conf(5) for details.
+
+[Network]
+#SpeedMeter=no
+#SpeedMeterIntervalSec=10sec
+#ManageForeignRoutingPolicyRules=yes
+#ManageForeignRoutes=yes
+#ManageForeignNextHops=yes
+#RouteTable=
+#IPv4Forwarding=
+#IPv6Forwarding=
+#IPv6PrivacyExtensions=no
+#UseDomains=no
+
+#[IPv6AddressLabel]
+#Prefix=
+#Label=
+
+[IPv6AcceptRA]
+#UseDomains=
+
+[DHCPv4]
+#ClientIdentifier=duid
+#DUIDType=vendor
+#DUIDRawData=
+#UseDomains=
+
+[DHCPv6]
+#DUIDType=vendor
+#DUIDRawData=
+#UseDomains=
+
+[DHCPServer]
+#PersistLeases=yes
+                        </code></pre>
+
+                        And now we find the culprit. Even though the UseDomains=no line is commented out, it still means that this is the default config. This works like SSHD, where commented out lines just mean that is the default the system uses. So, by default, UseDomains is disabled, which disables the domain search list that is provided by DHCP. At the time of this writing, I was unable to find any documentation that this change was made, but if you compare a fresh install of 24.04 to 26.04 you will see that the defaults have changed.
+                    </li>
+                    <li>
+                        <b>Solving the Problem</b>
+                        <br>
+                        We have a few options to choose from to solve the problem. We could update <i>/etc/systemd/networkd.conf</i> (which will change the setting for all adapters), or we could update the netplan for a single adapter. In this case, I chose to just update the netplan.
+                        <br>
+                        So, before we make any changes, let's go look at what our netplan looks like for our interface. Please note, you should go figure out which interface you are using so you update the correct one if you have multiple interfaces. You can do this using something like <code>networkctl status</code> or just <code>ip addr</code> to determine the correct network adapter.
+
+                        <pre><code><div class="code-header">(bash) cat /etc/netplan/00-installer-config.yaml</div>
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eno1:
+      dhcp4: true
+      dhcp6: false
+      match:
+        macaddress: b4:2e:99:a1:44:f4
+      set-name: eno1
+  version: 2
+                        </code></pre>
+
+                        This is a pretty barebones netplan configuration, and to fix this, we really only need to make 1 change by adding two lines to this file. So fire up whatever text editor you are most comfortable with, I prefer vim, and edit this file so it looks like this:
+
+                        <pre><code><div class="code-header">(bash) cat /etc/netplan/00-installer-config.yaml</div>
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eno1:
+      dhcp4: true
+      dhcp4-overrides:
+        use-domains: true
+      dhcp6: false
+      match:
+        macaddress: b4:2e:99:a1:44:f4
+      set-name: eno1
+  version: 2
+                        </code></pre>
+
+                        By adding the section <i>dhcp4-overrides:</i> we are telling netplan that we want to forcibly override some of the default configurations, in our case, we want to specify <i>use-domains: true</i>. This says that we should use the domain information supplied by DHCP.
+                        <br>
+                        After making changes to netplan, you need to be sure to <i>generate</i> and to <i>apply</i> those changes.
+
+                        <pre><code>netplan generate</code></pre>
+
+                        <pre><code>netplan apply</code></pre>
+
+                        Please note that the preceding two commands don't have any output. But if we made the edits properly, then we should be able to test and everything should magically work.
+
+                        <pre><code><div class="code-header">(bash) ping perforce</div>
+PING perforce.combobulate.test (10.190.64.20) 56(84) bytes of data.
+64 bytes from 10.190.64.20: icmp_seq=1 ttl=64 time=0.224 ms
+64 bytes from 10.190.64.20: icmp_seq=2 ttl=64 time=0.795 ms
+^C
+--- perforce.combobulate.test ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1002ms
+rtt min/avg/max/mdev = 0.224/0.509/0.795/0.285 ms
+                        </code></pre>
+                    </li>
+                </ul>
+                <h2>
+                Congratulations, you, in theory, have a working DHCP Domain Search List on Ubuntu 26.04.
+                </h2>
+            </div>
+        </div>
+        <footer>
+            <nav>
+                <ul class="link_menu">
+                    <li>
+                        <a href="https://combobulate.tech">
+                            <picture>
+                                <source srcset="/pictures/Combobulate_Light_Mini.svg" media="(prefers-color-scheme: dark)">
+                                <img src="/pictures/Combobulate_Dark_Mini.svg" alt="Mini Combobulate Company Logo">
+                            </picture>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/toc.html">TOC</a>
+                    </li>
+                    <li>
+                        <a href="#top">Top</a>
+                    </li>
+                    <li>
+                        <a href="/about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="mailto:info@combobulate.tech">Contact Us</a>
+                    </li>
+                </ul>
+            </nav>
+        </footer>
+        <div id="bottom"></div>
+        <button class="topButton">
+            <a href="#top">
+                Top
+            </a>
+        </button>
+        <button class="homeButton">
+            <a href="https://combobulate.tech">
+                Home
+            </a>
+        </button>
+    </body>
+</html>

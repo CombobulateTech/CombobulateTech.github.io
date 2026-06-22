@@ -1,61 +1,190 @@
-@media (min-width: 901px) {
-    html {
-        font-size: 2vw;
-    }
+:root {
+    color-scheme: light dark;
 }
 
-@media (min-width: 701px) and (max-width: 900px) {
-    html {
-        font-size: 3vw;
-    }
-}
- 
-@media (max-width: 700px) {
-    html {
-        font-size: 4vw;
-    }
+html {
+    font-size: clamp(1.05rem, 0.5rem + 1.6vw, 3rem);
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-Regular.woff2)
+    src: url(/fonts/Lotion-Regular.woff2);
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-RegularItalic.woff2);
+    src: url(/fonts/Lotion-RegularItalic.woff2);
     font-style: italic;
+    font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-Black.woff2);
+    src: url(/fonts/Lotion-Black.woff2);
     font-weight: bold;
+    font-display: swap;
 }
 
 @font-face {
     font-family: lotion;
-    src: url(fonts/Lotion-BlackItalic.woff2);
+    src: url(/fonts/Lotion-BlackItalic.woff2);
     font-style: italic;
     font-weight: bold;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: lotion;
+    src: url(/fonts/NotoSansJP-greetings.woff2);
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    unicode-range:
+        U+3000-303F,   /* punctuation */
+        U+3040-309F,   /* hiragana */
+        U+30A0-30FF,   /* katakana */
+        U+FF00-FFEF,   /* full-width roman / half-width kana */
+        U+4E00-9FFF;   /* common kanji (CJK Unified Ideographs) */
+}
+
+code {
+    font-family: lotion, monospace;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+.code-header {
+    font-family: lotion, monospace;
+    font-size: 0.7em;
+}
+
+pre {
+    padding: 3px;
+    border-radius: 5px;
+    overflow-x: auto;
+    line-height: 1.0;
 }
 
 @media (prefers-color-scheme: dark) {
     body {
-        font-family: lotion;
         color: #D4D4D4;
         background: #333333;
     }
+
     a:link {
         color: #89C4F4;
     }
+
     a:visited {
         color: #BE90D4;
+    }
+
+    code {
+        background-color: #595959;
+        color: #F4B4B4;
+    }
+    
+    .code-header {
+        color: #D4D4D4;
+    }
+
+    pre {
+        background-color: #595959;
+        color: #F4B4B4;
+    }
+
+    details > summary {
+        color: #89C4F4;
+    }
+
+    details > summary:focus-visible {
+        color: #89C4F4;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    body {
+        color: CanvasText;
+        background: Canvas;
+    }
+
+    a:link {
+        color: #0000EE;
+    }
+
+    a:visited {
+        color: #551A8B;
+    }
+
+    code {
+        background-color: #D4D4D4;
+        color: #AD1845;
+    }
+
+    .code-header {
+        color: #000000;
+    }
+
+    pre {
+        background-color: #D4D4D4;
+        color: #AD1845;
+    }
+
+    details > summary {
+        color: #0000EE;
+    }
+
+    details > summary:focus-visible {
+        color: #0000EE;
     }
 }
 
 body {
     font-family: lotion;
+}
+
+details > summary {
+    list-style: none;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+details > summary:focus-visible {
+    outline: 2px solid #89C4F4;
+    outline-offset: 2px;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: "+";
+    text-decoration: none;
+    display: inline-block;
+    padding-right: 4px;
+}
+
+details[open] > summary::before {
+    content: "-";
+}
+
+nav .link_menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+.list_extra_space > li {
+    margin-bottom: 1em;
 }
 
 .css_center {
@@ -128,3 +257,4 @@ body {
 .homeButton:hover {
     background-color: #89C4F4;
 }
+

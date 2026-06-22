@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Ubuntu 26.04 Server DHCP Client NTP</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../site.css">
+        <link rel="icon" type="image/svg+xml" href="/pictures/Combobulate_Dark_Mini.svg">
+    </head>
+    <body class="css_center">
+        <header id="top">
+            <a href="https://combobulate.tech">
+                <picture>
+                    <source srcset="/pictures/Combobulate_Light.svg" media="(prefers-color-scheme: dark)">
+                    <img src="/pictures/Combobulate_Dark.svg" alt="Combobulate Company Logo">
+                </picture>
+            </a>
+            <nav>
+                <ul class="link_menu">
+                    <li>
+                        <details name="nav-header">
+                            <summary>Site</summary>
+                            <ul>
+                                <li>
+                                    <a href="https://combobulate.tech">Home</a>
+                                </li>
+                                <li>
+                                    <a href="/toc.html">TOC</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/darknet13/darknet13_badge.html">Darknet 13 Badge</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/darknet13/darknet13_badge_assembly.html">Darknet 13 Badge Assembly</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/iscsi_thin_provisioning/iscsi_thin_provisioning.html">iSCSI Thin Provisioning</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/ubuntu_server_dhcp_client/domain_list.html">Ubuntu DHCP Client Domain List</a>
+                                </li>
+                                <li>
+                                    <a href="/blog/ubuntu_server_dhcp_client/ntp.html">Ubuntu DHCP Client NTP</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details name="nav-header">
+                            <summary>Page</summary>
+                            <ul>
+                                <li>
+                                    <a href="#bottom">Bottom</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    <li>
+                        <details name="nav-header">
+                            <summary>Contact Us</summary>
+                            <ul>
+                                <li>
+                                    <a href="/about.html">About</a>
+                                </li>
+                                <li>
+                                    <a href="mailto:info@combobulate.tech">E-Mail</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <div>
+            <hgroup class="css_center_text">
+                <h1>
+                    Ubuntu 26.04 Server DHCP Client NTP
+                </h1>
+                <p>
+                    <small>
+                        Posted on June 13, 2026
+                    </small>
+                </p>
+            </hgroup>
+            <div>
+                <h2>
+                    Problem Description
+                </h2>
+            </div>
+            <div>
+                I found that a fresh install of Ubuntu 26.04 server, by default, does not use the NTP server information (DHCP Option 042) supplied by DHCP. This prevents the automatic configuration of NTP servers from a central location, forcing you to manually update the NTP time servers. Currently, the NTP server set in the DHCP scope is 10.190.64.1. We will uncover this for ourselves further into troubleshooting. But giving this bit of info up front makes the rest of the commands easier to follow.
+                <br>
+                While it is possible to set the NTP servers manually, this may pose a problem if you need to change the NTP servers for whatever reason. This can be handled through automation or IaC (Infrastructure as Code), or you can configure the server to actually use the dynamic information supplied by the DHCP server.
+            </div>
+            <div>
+                <h2>
+                    Troubleshooting Steps
+                </h2>
+                <ul class="list_extra_space">
+                    <li>
+                        <b>Identify the NTP Client and Verify the Problem</b>
+                        <br>
+                        There are several options for NTP servers, but we will just take a look at what has been used as the default on Ubuntu. For this post, we will take a look at chrony, ntpd, and systemd-timesyncd. The quickest way that I have found to check, is to just search through the currently running services. I know some people may recommend using <i>ss</i> to see what processes are checking the NTP port (UDP 123), but you would miss chrony, as it is checking port 323 UDP now. So we will just use <i>systemctl</i> instead.
+
+                        <pre><code><div class="code-header">(bash) systemctl list-units --type=service --state=running | grep -iE 'chrony|ntp|timesyncd'</div>
+  chrony.service            loaded active running chrony, an NTP client/server
+                        </code></pre>
+                        
+                        So, it appears that Ubuntu 26.04 defaults to using <i>chrony</i> as the default NTP client. Now we can use <i>chronyc</i> to verify what NTP servers are actually being used.
+
+                        <pre><code><div class="code-header">(bash) chronyc sources</div>
+MS Name/IP address          Stratum Poll Reach LastRx Last sample
+================================================================================
+^+ ntp-nts-2.ps5.canonical.>      2  10   377   863   +733us[ +683us] +/-   71ms
+^+ ntp-nts-3.ps5.canonical.>      2  10   377   495   +900us[ +913us] +/-   70ms
+^+ ntp-nts-2.ps6.canonical.>      2   9   377   379   -674us[ -622us] +/-   58ms
+^+ ntp-nts-3.ps6.canonical.>      2   9   377   113   -219us[ -208us] +/-   67ms
+^+ ntp-nts-1.ps5.canonical.>      2  10   377    62   +615us[ +615us] +/-   71ms
+                        </code></pre>
+
+                        As you can see from the output, the NTP servers that are being called are the canonical NTP servers, which are not the same as the NTP server that is set in the DHCP scope (10.190.64.1).
+                        <br>
+                        So let's go check what is in the actual configuration of chrony to see if it can even pull information from the DHCP server.
+
+                        <pre><code><div class="code-header">(bash) cat /etc/chrony/chrony.conf</div>
+# Welcome to the chrony configuration file. See chrony.conf(5) for more
+# information about usable directives.
+
+# The Ubuntu NTP pool servers configuration was moved to /etc/chrony/sources.d/ubuntu-ntp-pools.sources
+
+# Use time sources from DHCP.
+# Those could be non-NTS sources. If you want to avoid unauthenticated NTP
+# sources comment the following line. (LP: #2115565)
+sourcedir /run/chrony-dhcp
+
+# Use NTP sources found in /etc/chrony/sources.d.
+sourcedir /etc/chrony/sources.d
+
+# This directive specifies the location of the file containing ID/key pairs for
+# NTP authentication
+keyfile /etc/chrony/chrony.keys
+
+# This directive specifies the file into which chronyd will store the rate
+# information
+driftfile /var/lib/chrony/chrony.drift
+
+# Save NTS keys and cookies.
+ntsdumpdir /var/lib/chrony
+
+# Uncomment the following line to turn logging on.
+#log tracking measurements statistics
+
+# Log files location
+logdir /var/log/chrony
+
+# Stop bad estimates upsetting machine clock.
+maxupdateskew 100.0
+
+# This directive enables kernel synchronisation (every 11 minutes) of the
+# real-time clock. Note that it can't be used along with the 'rtcfile' directive.
+rtcsync
+
+# Step the system clock instead of slewing it if the adjustment is larger than
+# one second, but only in the first three clock updates
+makestep 1 3
+
+# Get TAI-UTC offset and leap seconds from the system tz database.
+# This directive must be commented out when using time sources serving
+# leap-smeared time.
+leapseclist /usr/share/zoneinfo/leap-seconds.list
+
+# Include configuration files found in /etc/chrony/conf.d.
+confdir /etc/chrony/conf.d
+                        </code></pre>
+
+                        Reading through this config file, there is one section that sticks out <i>Use time sources from DHCP</i>. This section shows that time sources will be pulled from <i>sourcedir /run/chrony-dhcp</i>. This is great news, all we need to do now is to verify that the directory exists and is being populated by DHCP. A simple <i>ls</i> command should give us the info we need.
+
+                        <pre><code><div class="code-header">(bash) ls /run/chr*</div>
+chronyd.pid chronyd.sock
+                        </code></pre>
+
+                        Hmmm, well that didn't work, it does not look like there is a <i>/run/chrony-dhcp</i> directory. The next step is to check and see if the DHCP lease that is on the server actually has NTP information. It is possible all of this was for nothing, but let's verify first. To check the DHCP lease information, we will just <i>cat </i> a file / directory.
+
+                        <pre><code><div class="code-header">(bash) cat /run/systemd/netif/leases/*</div>
+# This is private data. Do not parse.
+ADDRESS=10.190.64.24
+NETMASK=255.255.255.0
+ROUTER=10.190.64.1
+SERVER_ADDRESS=10.190.64.1
+T1=3d 12h
+T2=6d 3h
+LIFETIME=1w
+DNS=10.190.64.1
+NTP=10.190.64.1
+DOMAINNAME=combobulate.test
+DOMAIN_SEARCH_LIST=combobulate.test
+CLIENTID=ffb6220feb00020000ab118179be1a8cd8138f
+OPTION_224=4647313045305442323239303031363600
+                        </code></pre>
+
+                        Based on this information, it does look like the NTP information is being sent by the DHCP server. We have now verified the NTP server is <i>NTP=10.190.64.1</i>. So now we just need to figure out why that information isn't being copied to <i>/run/chrony-dhcp</i>.
+                    </li>
+                    <li>
+                        <b>Verify Network / IP Managers</b>
+                        <br>
+
+                        There are few network / IP managers that could be in use. We will go through each of the network / IP managers (dhclient, NetworkManager, networkd), to track down which is installed and running. To do this, we will use <i>systemctl</i> to check if the service is running. Let's get to it. In this case, the following checks return nothing, so they are not running or possibly not installed.
+
+                        <pre><code>systemctl list-units --full -all | grep "dhclient"</code></pre>
+
+                        <pre><code>systemctl list-units --full -all | grep "NetworkManager"</code></pre>
+
+                        And we have a winner with <i>systemd-networkd</i>:
+
+                        <pre><code><div class="code-header">(bash) systemctl list-units --full -all | grep "systemd-networkd.service"</div>
+  systemd-networkd.service                          loaded  active  running  Network Management
+                        </code></pre>
+
+                        In this case, it appears that we are running systemd-networkd as the network manager.
+                    </li>
+                    <li>
+                        <b>Check Dispatcher and ifupdown hook scripts</b>
+                        <br>
+                        Now that we know which network manager is being used, we need to go and check which dispatchers / ifupdown scripts are being used.
+                        <br><br>
+                        Dispatchers are scripts that run when a network manager changes state. For example, when an interface goes up or down, the network manager will kick off the dispatcher scripts associated with the event. ifupdown scripts are similar and at a slightly lower level. When there is a change on the system, once again, such as when an interface goes up or down, udev will kick off the ifupdown scripts associated with the event. So, let's take a look at the ifupdown scripts first, and then we will look at the networkd-dispatcher scripts.
+                        <br><br>
+                        For the network ifupdown scripts, we will be looking in <i>/etc/network/if-up.d/</i>, because we mostly care about when the network interface is brought up. There are also rules when the interface goes down, but that won't really help us for our NTP project.
+                        <pre><code><div class="code-header">(bash) ls /etc/network/if-up.d/</div>
+chrony  ethtool
+                        </code></pre>
+
+                        We already discovered that we are using <i>chrony</i> so let's examine the contents of the <i>chrony</i> script to see what wonders it may contain.
+                        <pre><code><div class="code-header">(bash) cat /etc/network/if-up.d/chrony</div>
+#!/bin/sh
+
+set -e
+
+[ -x /usr/sbin/chronyd ] || exit 0
+
+if [ -e /run/chrony/chronyd.pid ]; then
+    chronyc onoffline > /dev/null 2>&1
+fi
+
+exit 0
+                        </code></pre>
+
+                        Hmmm, interesting, this script appears to check to see if chronyd exists (<i> [ -x /usr/sbin/chronyd ]</i>), if not it exits. Then it checks to see if there is a chronyd.pid that is running. Basically it looks to see if chronyd is installed and running and if so it runs <i>chronyc onoffline</i>. While all of this is well and good, this does not appear to actually try to create the elusive /run/chrony-dhcp. Let's move on.
+                        <br><br>
+                        The next thing that we need to check are the networkd-dispatcher scripts to see if they house the solution that we are looking for. We will follow a similar process and check to see if there are any scripts that we can examine first.
+
+                        <pre><code> ls /etc/networkd-dispatcher/routable.d/</code></pre>
+
+                        And based on the no output from our list command, there aren't any networkd-dispatcher scripts that are being executed.
+                        <br><br>
+                        Well, now we are in a conundrum, there aren't any ifupdown scripts that use DHCP NTP options, and there aren't any networkd-dispatcher scripts either. Just out of curiosity, let's take a look and see if there are any NetworkManager dispatcher scripts. Yes, we already verified earlier that we aren't using NetworkManager, but some packages will install NetworkManager scripts, even if NetworkManager is not installed itself.
+
+                        <pre><code><div class="code-header">(bash) ls /usr/lib/NetworkManager/dispatcher.d/</div>
+20-chrony-dhcp  20-chrony-onoffline
+                        </code></pre>
+
+                        Eureka, we have found something. Maybe not what we are looking for, because we aren't using NetworkManager, but we did find something. So let's peek into this <i>20-chrony-dhcp</i> treasure and see what we can learn.
+
+                        <pre><code><div class="code-header">(bash) cat /usr/lib/NetworkManager/dispatcher.d/20-chrony-dhcp</div>
+#!/bin/sh
+# This is a NetworkManager dispatcher script for chronyd to update
+# its NTP sources with servers from DHCP options passed by NetworkManager
+# in the DHCP4_NTP_SERVERS and DHCP6_DHCP6_NTP_SERVERS environment variables.
+
+export LC_ALL=C
+
+interface=$1
+action=$2
+
+chronyc=/usr/bin/chronyc
+server_options=iburst
+server_dir=/run/chrony-dhcp
+
+dhcp_server_file=$server_dir/$interface.sources
+dhcp_ntp_servers="$DHCP4_NTP_SERVERS $DHCP6_DHCP6_NTP_SERVERS"
+
+add_servers_from_dhcp() {
+    rm -f "$dhcp_server_file"
+    for server in $dhcp_ntp_servers; do
+        # Check for invalid characters (from the DHCPv6 NTP FQDN suboption)
+        len1=$(printf '%s' "$server" | wc -c)
+        len2=$(printf '%s' "$server" | tr -d -c 'A-Za-z0-9:.-' | wc -c)
+        if [ "$len1" -ne "$len2" ] || [ "$len2" -lt 1 ] || [ "$len2" -gt 255 ]; then
+            continue
+        fi
+
+        printf 'server %s %s\n' "$server" "$server_options" >> "$dhcp_server_file"
+    done
+    $chronyc reload sources > /dev/null 2>&1 || :
+}
+
+clear_servers_from_dhcp() {
+    if [ -f "$dhcp_server_file" ]; then
+        rm -f "$dhcp_server_file"
+        $chronyc reload sources > /dev/null 2>&1 || :
+    fi
+}
+
+mkdir -p $server_dir
+
+case "$action" in
+    up|dhcp4-change|dhcp6-change)
+        add_servers_from_dhcp;;
+    down)
+        clear_servers_from_dhcp;;
+esac
+
+exit 0
+                        </code></pre>
+
+                        Wow, this looks exactly like what we are looking for. Reading through this script, it appears that this script will create the <i>/run/chrony-dhcp</i> and load the file with all of the NTP servers from DHCP using either <i>$DHCP4_NTP_SERVERS</i> or <i>$DHCP6_DHCP6_NTP_SERVERS</i>. But wait, if we read the top of the script, it says that those two variables are assigned by NetworkManager. Just to double check, let's see if those variables exist in the OS.
+
+                        <pre><code>echo $DHCP4_NTP_SERVERS</code></pre>
+
+                        <pre><code>echo $DHCP6_DHCP6_NTP_SERVERS</code></pre>
+
+                        Yup, it does look like those variables are assigned by NetworkManager before the script is executed, as both of them are empty. So at this point we have hit a bit of a dead end with what is configured by the OS and the different packages.
+                        <br><br>
+                        You can read more about this dead end <a href="https://www.mail-archive.com/chrony-dev@chrony.tuxfamily.org/msg02177.html">here</a>.
+                    </li>
+                    <li>
+                        <b>Build a Custom Solution</b>
+                        <br>
+                        Now is the time for the benefits of Linux. When you run into a dead end problem, you just write your own.
+                        <br>
+                        Let's review all of the information that we have covered so far. We have a goal of using the NTP server that is supplied by the DHCP server. We have verified that the DHCP server is supplying the NTP server information <i>/run/systemd/netif/leases/*</i>. We know that we are running <i>chrony</i> as the NTP client, and we also know that <i>chrony</i> will pull DHCP NTP servers from <i>/run/chrony-dhcp</i> to use as sources. We also know that we are using <i>systemd-networkd</i> as the network manager, and we know that <i>systemd-networkd</i> uses networkd-dispatcher as the dispatcher.
+                        <br><br>
+                        If we know all of that, then working backwards, we know that we need to write a script for networkd-dispatcher, that populates a directory (<i>/run/chrony-dhcp</i>) with information that is pulled from <i>/run/systemd/netif/leases/*</i> so that chrony will use NTP servers from DHCP.
+                        <br><br>
+                        So fire up your favorite editor and let's get to coding.
+                        <pre><code><div class="code-header">(bash) vim /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</div>
+#!/bin/sh
+# This is a systemd-networkd dispatcher script for chronyd to update
+# its NTP sources with servers from DHCP options pulled from
+# /run/systemd/netif/leases/{interface index}
+# $IFACE is pulled from networkd-dispatcher
+
+export LC_ALL=C
+
+network_class_index="/sys/class/net/$IFACE/ifindex"
+lease_dir="/run/systemd/netif/leases"
+dhcp_run_dir="/run/chrony-dhcp"
+full_script_path="$(realpath "$0")"
+script_name="$(basename "$0")"
+dir_path="$(dirname "$full_script_path")"
+
+# Create the chrony-dhcp directory if it doesn't already exist
+if [ ! -d $dhcp_run_dir ]
+then
+    mkdir -p $dhcp_run_dir
+fi
+
+# Remove any existing entires if they exist
+if [ -f "$dhcp_run_dir/$IFACE.sources" ]
+then
+    rm -f "$dhcp_run_dir/$IFACE.sources"
+fi
+
+# Pull the ifindex to find the lease file
+if [ -f "$network_class_index" ]
+then
+    ifindex=$(cat "$network_class_index")
+else
+    exit 0
+fi
+
+# Parse the lease for NTP servers
+if [ -f "$lease_dir/$ifindex" ]
+then
+    ntp_servers=$(grep '^NTP=' "$lease_dir/$ifindex" | awk -F= '{print $2}')
+else
+    exit 0
+fi
+
+# Add NTP server info to chrony-dhcp
+if [ -n "$ntp_servers" ]
+then
+    echo "# This list is automatically updated by $dir_path/$script_name" >> "$dhcp_run_dir/$IFACE.sources"
+    for ntp_server in $ntp_servers
+    do
+        echo "server $ntp_server iburst" >> "$dhcp_run_dir/$IFACE.sources"
+    done
+
+    chronyc reload sources >/dev/null 2>&1
+
+else
+    exit 0
+fi
+
+                        </code></pre>
+
+                        A quick run down of this script, first it checks to see if the <i>/run/chrony-dhcp</i> directory exists, and if not, it creates it. Then it pulls the ifindex from <i>/sys/class/net/$IFACE/ifindex</i>. $IFACE is submitted by networkd-dispatcher when the script is executed. Then it pulls the lease information for that ifindex <i>/run/systemd/netif/leases/$ifindex</i> and parses the NTP information. Finally, it copies the NTP server info into /run/chrony-dhcp and reloads the sources for chrony.
+                        <br><br>
+                        If you copy this script over to <i>/etc/networkd-dispatcher/routable.d/</i>, and set the proper permissions, then it should execute every time there is an interface change.
+
+                        <pre><code>cp 20-chrony-dhcp /etc/networkd-dispatcher/routable.d/</code></pre>
+
+                        <pre><code>chown root:root /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code></pre>
+
+                        <pre><code>chmod 755 /etc/networkd-dispatcher/routable.d/20-chrony-dhcp</code></pre>
+
+                        To verify that everything is running correctly, just check <i>chronyc</i> again.
+
+                        <pre><code><div class="code-header">(bash) chronyc sources</div>
+MS Name/IP address          Stratum Poll Reach LastRx Last sample
+================================================================================
+^+ ntp-nts-2.ps5.canonical.>      2  10   377   863   +733us[ +683us] +/-   71ms
+^+ ntp-nts-3.ps5.canonical.>      2  10   377   495   +900us[ +913us] +/-   70ms
+^+ ntp-nts-2.ps6.canonical.>      2   9   377   379   -674us[ -622us] +/-   58ms
+^+ ntp-nts-3.ps6.canonical.>      2   9   377   113   -219us[ -208us] +/-   67ms
+^+ ntp-nts-1.ps5.canonical.>      2  10   377    62   +615us[ +615us] +/-   71ms
+^+ _gateway                       3   6   377    41  -2765us[-2740us] +/-   63ms
+                        </code></pre>
+
+                        If you notice we now have <i>_gateway</i> added to the list. In our case here <i>10.190.64.1</i> is the gateway, so this is correct. But you will notice that all of the other default NTP servers still exist. *sigh* this is because <i>chrony</i> is reading from all sources (<i>/run/chrony-dhcp</i>, <i>/etc/chrony/sources.d</i>). A non-destructive quick fix is to rename the default source in <i>/etc/chrony/sources.d</i>
+
+                        <pre><code>mv /etc/chrony/sources.d/ubuntu-ntp-pools.sources /etc/chrony/sources.d/ubuntu-ntp-pools.sources.old</code></pre>
+                        <pre><code>chronyc reload sources</code></pre>
+
+                        Chrony will only read files with a <i>.sources</i> extension. By just renaming the file to <i>.old</i> it will stop using it as a default source. We then just reload the sources really quick, and voila, we now only have one entry in our NTP sources list.
+                        <br><br>
+                        One last quick note, since we removed the default NTP servers from <i>chrony</i> that means that if DHCP quits sending out NTP (Option 042), then the server will not have any NTP servers to query. If this were to happen, the quick fix is to just rename <i>/etc/chrony/sources.d/ubuntu-ntp-pools.sources.old</i> back, by removing the <i>.old</i> extension. Then just reload the <i>chrony</i> sources again.
+                        
+                        <pre><code><div class="code-header">(bash) chronyc sources</div>
+MS Name/IP address          Stratum Poll Reach LastRx Last sample
+================================================================================
+^+ _gateway                       3   6   377     8  +1545us[ +706us] +/-   64ms
+                        </code></pre>
+                    </li>
+                </ul>
+                <h2>
+                Congratulations, you, in theory, have a working DHCP NTP server configuration on Ubuntu 26.04.
+                </h2>
+            </div>
+        </div>
+        <footer>
+            <nav>
+                <ul class="link_menu">
+                    <li>
+                        <a href="https://combobulate.tech">
+                            <picture>
+                                <source srcset="/pictures/Combobulate_Light_Mini.svg" media="(prefers-color-scheme: dark)">
+                                <img src="/pictures/Combobulate_Dark_Mini.svg" alt="Mini Combobulate Company Logo">
+                            </picture>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/toc.html">TOC</a>
+                    </li>
+                    <li>
+                        <a href="#top">Top</a>
+                    </li>
+                    <li>
+                        <a href="/about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="mailto:info@combobulate.tech">Contact Us</a>
+                    </li>
+                </ul>
+            </nav>
+        </footer>
+        <div id="bottom"></div>
+        <button class="topButton">
+            <a href="#top">
+                Top
+            </a>
+        </button>
+        <button class="homeButton">
+            <a href="https://combobulate.tech">
+                Home
+            </a>
+        </button>
+    </body>
+</html>
